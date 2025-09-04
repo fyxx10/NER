@@ -1,28 +1,36 @@
 import streamlit as st
-import spacy_streamlit as spt
-import spacy
-
-nlp = spacy.load('en_core_web_sm')
+from services.nlp_service import NLPService
+from ui.components import TextInputComponent, ResultsDisplayComponent
+from utils.validators import InputValidator
 
 def main():
-    st.title('Name Entity Recognition APP')
+    st.title("Named Entity Recognition System")
     
-    menu = ['Home', 'NER']
-    choice = st.sidebar.selectbox('menu',menu)
-    if choice == 'Home':
-        st.subheader('Word Tokenization')
-        raw_text = st.text_area('Text To Tokenize','ENTER TEXT HERE')
-        docs = nlp(raw_text)
-        if st.button('Tokenize'):
-            spt.visualize_tokens(docs)
+    # Initialize services
+    nlp_service = NLPService()
+    text_input = TextInputComponent()
+    results_display = ResultsDisplayComponent()
     
-    elif choice == 'NER':
-        st.subheader('Name Entity Recognition')
-        raw_text = st.text_area('Text To Tokenize','ENTER TEXT HERE')
-        docs = nlp(raw_text)
-        spt.visualize_ner(docs)
+    # Get user input
+    input_text = text_input.render()
+    
+    if input_text:
+        # Validate input
+        is_valid, error_msg = InputValidator.validate_text(input_text)
         
-        
-        
-if __name__== '__main__':
+        if not is_valid:
+            st.error(error_msg)
+            return
+            
+        try:
+            # Process text
+            ner_result = nlp_service.process_text(input_text)
+            
+            # Display results
+            results_display.render(ner_result)
+            
+        except Exception as e:
+            st.error(f"An error occurred during processing: {str(e)}")
+
+if __name__ == "__main__":
     main()
